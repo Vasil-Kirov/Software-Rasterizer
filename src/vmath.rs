@@ -1,10 +1,12 @@
 
-use std::{ops::*};
+use std::{fmt::Formatter, ops::*};
+use rand::Rng;
 
 pub fn clamp<T: std::cmp::PartialOrd>(x: T, from: T, to: T) -> T {
     if x < from { from } else if x > to { to } else { x }
 }
 
+#[allow(dead_code)]
 pub fn lerp(a: f32, b:f32, t: f32) -> f32 {
     a + (b - a) * t
 }
@@ -187,6 +189,12 @@ impl Vec3 {
     }
 }
 
+impl std::fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
 impl Mul<f32> for Vec3 {
     type Output = Vec3;
 
@@ -198,6 +206,34 @@ impl Mul<f32> for Vec3 {
             z: self.z * rhs,
         }
     }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    #[inline]
+    fn mul(self, rhs: Vec3) -> Self {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+
+}
+
+impl Add<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    #[inline]
+    fn add(self, rhs: Vec3) -> Self {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+
 }
 
 impl Div<f32> for Vec3 {
@@ -255,6 +291,16 @@ impl Vec4 {
 
     /// All ones.
     pub const ONE: Self = Self::splat(1.0);
+
+    #[inline]
+    pub fn rand_01<T: Rng>(rng: &mut T) -> Self {
+        Self {
+            x: rng.gen_range(0.0..1.0),
+            y: rng.gen_range(0.0..1.0),
+            z: rng.gen_range(0.0..1.0),
+            w: rng.gen_range(0.0..1.0),
+        }
+    }
 
     #[inline]
     pub const fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
