@@ -20,13 +20,16 @@ impl Renderer {
         self.target.color_buffer.iter_mut().for_each(|x| *x = color);
     }
 
-    pub fn draw_triangles(&mut self, vert_buf: &Vec<Vertex>, index_buf: &Vec<u32>, model: ModelTransform) {
+    pub fn draw_triangles(&mut self, vert_buf: &Vec<Vertex>, index_buf: &Vec<u32>, in_model: ModelTransform) {
         if index_buf.len() == 0 {
             return;
         }
 
         let mut rng = rand::rngs::StdRng::from_seed([128;32]);
 
+        let mut model = in_model.clone();
+        model.calculate_transform();
+        
         let triangle_count = index_buf.len() / 3;
         for i in 0..triangle_count {
             let face_idx = i*3;

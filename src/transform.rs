@@ -2,10 +2,15 @@
 
 use crate::vmath::*;
 
+#[derive(Clone)]
 pub struct ModelTransform {
     pub translate: Vec3,
     pub yaw: f32,
     pub pitch: f32,
+
+    ihat: Vec3,
+    jhat: Vec3,
+    khat: Vec3,
 }
 
 
@@ -15,6 +20,10 @@ impl ModelTransform {
             translate: translate,
             yaw: yaw,
             pitch: pitch,
+
+            ihat: Vec3::ZERO,
+            jhat: Vec3::ZERO,
+            khat: Vec3::ZERO,
         }
     }
 
@@ -22,8 +31,7 @@ impl ModelTransform {
         ihat * p.x + jhat * p.y + khat * p.z
     }
 
-    pub fn apply_transform(&self, p: &mut Vec3) {
-
+    pub fn calculate_transform(&mut self) {
         let yaw_ihat = Vec3::new(f32::cos(self.yaw), 0.0, f32::sin(self.yaw));
         let yaw_jhat = Vec3::new(0.0, 1.0, 0.0);
         let yaw_khat = Vec3::new(-f32::sin(self.yaw), 0.0, f32::cos(self.yaw));
@@ -32,11 +40,13 @@ impl ModelTransform {
         let pitch_khat = Vec3::new(0.0, f32::cos(self.pitch),-f32::sin(self.pitch));
         let pitch_jhat = Vec3::new(0.0, f32::sin(self.pitch), f32::cos(self.pitch));
 
-        let ihat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_ihat);
-        let jhat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_jhat);
-        let khat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_khat);
+        self.ihat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_ihat);
+        self.jhat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_jhat);
+        self.khat = Self::apply_rotation(yaw_ihat, yaw_jhat, yaw_khat, pitch_khat);
+    }
 
-        *p = Self::apply_rotation(ihat, jhat, khat, *p);
+    pub fn apply_transform(&self, p: &mut Vec3) {
+        *p = Self::apply_rotation(self.ihat, self.jhat, self.khat, *p);
 
         p.x += self.translate.x;
         p.y += self.translate.y;
