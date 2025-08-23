@@ -13,6 +13,9 @@ use transform::{ModelTransform};
 use model::Model;
 use std::f32::consts::{PI};
 
+use self::transform::CameraTransform;
+use self::transform::WorldToScreenTransform;
+
 
 fn main() {
     const WIDTH: i32 = 1280;
@@ -29,15 +32,20 @@ fn main() {
     let mut last_frame_time = rl.get_time() / 1000.0;
     let mut delta_t = 0.1;
     let mut yaw = PI/4.0;
+    
+    let mut camera_pos = Vec3::ZERO;
 
     rl.set_target_fps(144);
     while !rl.window_should_close() {
         renderer.clear_color(Vec4::new(0.258824, 0.258824, 0.435294, 1.0f32));
 
-        let model = ModelTransform::new(Vec3::new(2.0, 1.5, 0.0), yaw, 1.0);
-        yaw += delta_t as f32;
+        let model = ModelTransform::new(Vec3::new(0.0, 0.0, 4.0), yaw, 0.0);
+        yaw += 0.2 * delta_t as f32;
 
-        renderer.draw_triangles(&cube.verts, &cube.indices, model);
+        let camera = CameraTransform::new(camera_pos, 0.0, 0.0);
+        let persp = WorldToScreenTransform::new(120.0, 1280.0, 720.0, 0.1, 100.0);
+
+        renderer.draw_triangles(&cube.verts, &cube.indices, model, camera, persp);
 
         let pixels = renderer.target.color_buffer_to_pixels();
 
@@ -49,10 +57,27 @@ fn main() {
             d.draw_texture(&backbuffer_texture, 0, 0, color::rcolor(0xFF, 0xFF, 0xFF, 0xFF));
         }
 
+        if rl.is_key_down(KeyboardKey::KEY_W)
+        {
+            camera_pos.z += delta_t;
+        }
+        if rl.is_key_down(KeyboardKey::KEY_S)
+        {
+            camera_pos.z -= delta_t;
+        }
+        if rl.is_key_down(KeyboardKey::KEY_D)
+        {
+            camera_pos.x += delta_t;
+        }
+        if rl.is_key_down(KeyboardKey::KEY_A)
+        {
+            camera_pos.x -= delta_t;
+        }
+
         let end_frame_time = rl.get_time() / 1000.0;
         let ms_elapsed = end_frame_time - last_frame_time;
 
-        delta_t = clamp(ms_elapsed / 1000.0, 0.0167, 0.1);
+        delta_t = clamp(ms_elapsed / 1000.0, 0.0167, 0.1) as f32;
 
         last_frame_time = end_frame_time;
     }

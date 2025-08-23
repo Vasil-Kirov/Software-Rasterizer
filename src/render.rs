@@ -1,9 +1,10 @@
 
 use rand::SeedableRng;
 
+use crate::transform::WorldToScreenTransform;
 use crate::vmath::*;
 use crate::render_target::*;
-use crate::transform::{ModelTransform};
+use crate::transform::{Transform, ModelTransform, CameraTransform};
 
 pub struct Renderer {
     pub target: RenderTarget,
@@ -20,7 +21,7 @@ impl Renderer {
         self.target.color_buffer.iter_mut().for_each(|x| *x = color);
     }
 
-    pub fn draw_triangles(&mut self, vert_buf: &Vec<Vertex>, index_buf: &Vec<u32>, in_model: ModelTransform) {
+    pub fn draw_triangles(&mut self, vert_buf: &Vec<Vertex>, index_buf: &Vec<u32>, in_model: ModelTransform, in_camera: CameraTransform, in_wts: WorldToScreenTransform) {
         if index_buf.len() == 0 {
             return;
         }
@@ -28,7 +29,12 @@ impl Renderer {
         let mut rng = rand::rngs::StdRng::from_seed([128;32]);
 
         let mut model = in_model.clone();
+        let mut camera = in_camera.clone();
+        let mut wts = in_wts.clone();
+
         model.calculate_transform();
+        camera.calculate_transform();
+        wts.calculate_transform();
         
         let triangle_count = index_buf.len() / 3;
         for i in 0..triangle_count {
@@ -45,9 +51,17 @@ impl Renderer {
             model.apply_transform(&mut v2.position);
             model.apply_transform(&mut v3.position);
 
-            let p1 = world_to_screen(v1.position.v4(), self.target.width, self.target.height);
-            let p2 = world_to_screen(v2.position.v4(), self.target.width, self.target.height);
-            let p3 = world_to_screen(v3.position.v4(), self.target.width, self.target.height);
+            camera.apply_transform(&mut v1.position);
+            camera.apply_transform(&mut v2.position);
+            camera.apply_transform(&mut v3.position);
+
+            wts.apply_transform(&mut v1.position);
+            wts.apply_transform(&mut v2.position);
+            wts.apply_transform(&mut v3.position);
+
+            let p1 = IVec2::new(v1.position.x as i32, v1.position.y as i32);
+            let p2 = IVec2::new(v2.position.x as i32, v2.position.y as i32);
+            let p3 = IVec2::new(v3.position.x as i32, v3.position.y as i32);
 
             let bound_start_x = clamp(p1.x.min(p2.x.min(p3.x)), 0, self.target.width-1);
             let bound_start_y = clamp(p1.y.min(p2.y.min(p3.y)), 0, self.target.height-1);

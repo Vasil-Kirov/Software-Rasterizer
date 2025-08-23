@@ -18,13 +18,6 @@ where
     (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 }
 
-pub fn world_to_screen(world: Vec4, w: i32, h: i32) -> IVec2 {
-    IVec2::new(
-        map(world.x, 0.0, 5.0, 0.0, w as f32) as i32,
-        map(world.y, 0.0, 2.8125, 0.0, h as f32) as i32,
-    )
-}
-
 pub fn dot(a: Vec2, b: Vec2) -> f32 {
     a.x * b.x + a.y * b.y
 }
